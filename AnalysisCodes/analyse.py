@@ -87,5 +87,5 @@ def generate_features_for_multiple_files(filepaths):
 
 # Example usage
 if __name__ == "__main__":
-    file_list = ["sample1.exe"]  # Replace with your actual file paths
+    file_list = ["sample.exe"]  # Replace with your actual file paths
     generate_features_for_multiple_files(file_list)
