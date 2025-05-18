@@ -1,13 +1,13 @@
 // src/components/Header.jsx
-import React from 'react';
-import { Shield } from 'lucide-react';
+import React from "react";
+import { Shield } from "lucide-react";
 
 const Header = () => {
   return (
     <header className="header">
       <div className="header-content">
         <Shield size={32} />
-        <h1>SecureShield</h1>
+        <h1>NeuralShield</h1>
       </div>
       <p className="header-subtitle">Advanced File Malware Detection System</p>
     </header>

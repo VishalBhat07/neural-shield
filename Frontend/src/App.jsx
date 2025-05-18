@@ -1,7 +1,7 @@
 // src/App.jsx
 import React, { useState, useEffect } from "react";
 import Header from "./components/Header";
-import DropZone from "./components/Dropzone";
+import DropZone from "./components/DropZone";
 import FileInfo from "./components/Fileinfo";
 import FeatureSection from "./components/FeatureSection";
 import Footer from "./components/Footer";
@@ -14,24 +14,37 @@ const App = () => {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [animation, setAnimation] = useState(null);
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   // Handle file processing
-  const handleFiles = (files) => {
-    const file = files[0];
-    setFile(file);
+  const handleFiles = async (files) => {
+    setFile(files);
 
     // Simulate scanning process
     setScanning(true);
     setScanResult(null);
 
-    setTimeout(() => {
-      setScanning(false);
-      // Example result - in a real app, this would be based on actual scanning
-      setScanResult({
-        clean: Math.random() > 0.3, // Randomly show clean or infected for demo
-        threatName: Math.random() > 0.3 ? null : "Example.Malware.Gen",
+    if (!files || files.length === 0) return;
+
+    const formData = new FormData();
+    formData.append("file", files[0]); // For single file
+
+    try {
+      const response = await fetch(backendUrl + "/upload", {
+        method: "POST",
+        body: formData,
       });
-    }, 2000);
+      // console.log("hehe");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Backend response:", result);
+      // You can set state or show result in UI here
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
   };
 
   // Clear animation after it completes
