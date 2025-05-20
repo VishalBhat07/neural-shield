@@ -7,7 +7,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h3>SecureShield</h3>
+          <h3>NeuralShield</h3>
           <p>
             An open-source file malware detection system designed to keep your
             data safe.
@@ -36,7 +36,7 @@ const Footer = () => {
           <h3>Connect</h3>
           <div className="social-links">
             <a
-              href="https://github.com/vishalbhat07/secure-shield"
+              href="https://github.com/vishalbhat07/neural-shield"
               target="_blank"
               rel="noopener noreferrer"
               className="social-link"
