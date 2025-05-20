@@ -1,2 +1,6 @@
 .DS_Store
 *.csv
+*.rar
+__pycache__/
+*.pyc
+Backend/invalid-files/
