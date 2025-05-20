@@ -5,6 +5,7 @@ import joblib
 import pandas as pd
 import pickle
 import os
+import time
 
 # Create directory for model files if it doesn't exist
 os.makedirs('model', exist_ok=True)
@@ -42,6 +43,7 @@ CORS(app, origins=["http://localhost:5173"])
 @app.route('/upload', methods=['POST'])
 def upload_file():
     try:
+        start_time = time.time()
         # Check if file was sent in request
         if 'file' not in request.files:
             return jsonify({"error": "No file part in the request"}), 400
@@ -52,7 +54,8 @@ def upload_file():
         if file.filename == '':
             return jsonify({"error": "No file selected"}), 400
             
-        # Read the file data
+        file_size = len(file.read())
+        file.seek(0)  # Reset file pointer after reading size
         file_data = file.read()
         
         # Extract features
@@ -72,10 +75,17 @@ def upload_file():
         prediction = clf.predict(input_df)[0]
         proba = clf.predict_proba(input_df)[0][1] if hasattr(clf, "predict_proba") else None
 
+        processing_time = time.time() - start_time
+
         result = {
             "message": "File processed successfully",
+            "file_name": file.filename,
+            "file_size": file_size,
             "malware_prediction": bool(prediction == 1),  # 1 = malware, 0 = benign (adjust if needed)
             "prediction_class": int(prediction),
+            "features_used": input_features,
+            "feature_list": FEATURES_LIST,
+            "processing_time": processing_time,
         }
         if proba is not None:
             result["probability"] = float(proba)

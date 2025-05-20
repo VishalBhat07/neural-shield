@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Shield, FileCheck, Upload, Github, AlertTriangle } from "lucide-react";
-
+import { Shield, FileCheck, Upload, Github, AlertTriangle, ChevronDown, ChevronUp, Download } from "lucide-react";
+//useless file as it is not used in the code
 // CSS styles
 const styles = {
   container: {
@@ -89,10 +89,56 @@ const styles = {
     borderRadius: "8px",
     boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
     width: "80%",
-    maxWidth: "600px",
+    maxWidth: "800px",
+    display: "flex",
+    flexDirection: "column",
+  },
+  resultHeader: {
     display: "flex",
     alignItems: "center",
     gap: "15px",
+    marginBottom: "15px",
+  },
+  detailSection: {
+    marginTop: "15px",
+    borderTop: "1px solid #eee",
+    paddingTop: "15px",
+  },
+  detailToggle: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    background: "none",
+    border: "none",
+    padding: "10px 0",
+    width: "100%",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+  featureGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+    gap: "10px",
+    marginTop: "10px",
+  },
+  featureItem: {
+    padding: "8px",
+    backgroundColor: "#f0f0f0",
+    borderRadius: "4px",
+    fontSize: "13px",
+  },
+  progressBar: {
+    height: "8px",
+    backgroundColor: "#e0e0e0",
+    borderRadius: "4px",
+    overflow: "hidden",
+    marginTop: "5px",
+    width: "100%",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#e74c3c",
+    transition: "width 0.5s ease",
   },
   footer: {
     backgroundColor: "#2c3e50",
@@ -119,6 +165,55 @@ const styles = {
     pointerEvents: "none",
     animation: "dropAnimation 0.8s ease-out",
     zIndex: 10,
+  },
+  badge: {
+    display: "inline-block",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    fontSize: "12px",
+    fontWeight: "bold",
+    color: "white",
+    marginLeft: "10px",
+  },
+  threatBadge: {
+    backgroundColor: "#e74c3c",
+  },
+  safeBadge: {
+    backgroundColor: "#27ae60",
+  },
+  detailGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "10px",
+    marginTop: "10px",
+  },
+  detailItem: {
+    padding: "10px",
+    backgroundColor: "#f0f0f0",
+    borderRadius: "4px",
+    display: "flex",
+    flexDirection: "column",
+  },
+  detailLabel: {
+    fontSize: "12px",
+    color: "#7f8c8d",
+    marginBottom: "2px",
+  },
+  detailValue: {
+    fontWeight: "bold",
+  },
+  reportButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    backgroundColor: "#3498db",
+    color: "white",
+    border: "none",
+    padding: "8px 16px",
+    borderRadius: "4px",
+    cursor: "pointer",
+    marginTop: "15px",
+    alignSelf: "flex-end",
   },
   "@keyframes dropAnimation": {
     "0%": {
@@ -152,11 +247,15 @@ const FileAnimation = ({ x, y, onAnimationEnd }) => {
 
 // Main component
 const MalwareDetectionSystem = () => {
+  console.log("MalwareDetectionSystem component rendered");
+
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [animation, setAnimation] = useState(null);
+  const [showFeatures, setShowFeatures] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
   const fileInputRef = useRef(null);
   const dropZoneRef = useRef(null);
 
@@ -214,6 +313,28 @@ const MalwareDetectionSystem = () => {
     const formData = new FormData();
     formData.append("file", file);
 
+    // Simulate API call for demonstration
+    // In a real application, you would use the actual fetch call to your backend
+    setTimeout(() => {
+      // Mock response
+      const mockResponse = {
+        feature_list: ['MajorLinkerVersion', 'MinorOperatingSystemVersion', 'MajorSubsystemVersion', 'SizeOfStackReserve', 'TimeDateStamp', 'MajorOperatingSystemVersion', 'Characteristics', 'ImageBase', 'Subsystem', 'MinorImageVersion', 'MinorSubsystemVersion', 'SizeOfInitializedData', 'DllCharacteristics', 'DirectoryEntryExport', 'ImageDirectoryEntryExport', 'CheckSum', 'DirectoryEntryImportSize', 'SectionMaxChar', 'MajorImageVersion', 'AddressOfEntryPoint', 'SectionMinEntropy', 'SizeOfHeaders', 'SectionMinVirtualsize'],
+        features_used: [11, 0, 4, 1048576, 1381682754, 4, 258, 4194304, 2, 0, 0, 2048, 34112, 0, 0, 0, 87, 3, 0, 41454, 0.08153941234324169, 512, 12],
+        file_name: file.name,
+        file_size: file.size,
+        malware_prediction: true,
+        message: "File processed successfully",
+        prediction_class: 1,
+        probability: 0.91,
+        processing_time: 0.5089
+      };
+
+      setScanning(false);
+      setScanResult(mockResponse);
+    }, 2000);
+
+    // Actual backend call (commented out for now)
+    /*
     fetch("http://localhost:8080/upload", {
       method: "POST",
       body: formData,
@@ -231,11 +352,7 @@ const MalwareDetectionSystem = () => {
           return;
         }
 
-        setScanResult({
-          clean: !data.malware_prediction,
-          threatName: data.malware_prediction ? "Malware Detected" : null,
-          score: data.probability !== undefined ? Math.round(data.probability * 100) : undefined,
-        });
+        setScanResult(data);
       })
       .catch((err) => {
         setScanning(false);
@@ -245,6 +362,7 @@ const MalwareDetectionSystem = () => {
           score: undefined,
         });
       });
+    */
   };
 
   // Handle click on dropzone
@@ -306,6 +424,51 @@ const MalwareDetectionSystem = () => {
       window.removeEventListener("dragleave", handleGlobalDragLeave);
     };
   }, []);
+
+  // Format bytes into human readable format
+  const formatBytes = (bytes, decimals = 2) => {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
+
+  // Generate scan report as text
+  const generateReport = () => {
+    if (!scanResult) return;
+
+    let reportText = `===== Malware Detection Report =====\n\n`;
+    reportText += `File: ${scanResult.file_name}\n`;
+    reportText += `Size: ${formatBytes(scanResult.file_size)}\n`;
+    reportText += `Scan Date: ${new Date().toLocaleString()}\n\n`;
+    reportText += `Result: ${scanResult.malware_prediction ? 'MALWARE DETECTED' : 'CLEAN'}\n`;
+    reportText += `Confidence: ${Math.round(scanResult.probability * 100)}%\n`;
+    reportText += `Prediction Class: ${scanResult.prediction_class}\n`;
+    reportText += `Processing Time: ${scanResult.processing_time.toFixed(2)}s\n\n`;
+    
+    reportText += `===== Features Analyzed =====\n\n`;
+    if (scanResult.feature_list && scanResult.features_used) {
+      for (let i = 0; i < scanResult.feature_list.length; i++) {
+        reportText += `${scanResult.feature_list[i]}: ${scanResult.features_used[i]}\n`;
+      }
+    }
+
+    // Create blob and download
+    const blob = new Blob([reportText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `malware-report-${scanResult.file_name}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div style={styles.container}>
@@ -369,29 +532,105 @@ const MalwareDetectionSystem = () => {
           <div
             style={{
               ...styles.fileInfo,
-              backgroundColor: scanResult.clean ? "#e6f7ee" : "#fde8e8",
+              backgroundColor: !scanResult.malware_prediction ? "#e6f7ee" : "#fde8e8",
               borderLeft: `5px solid ${
-                scanResult.clean ? "#27ae60" : "#e74c3c"
+                !scanResult.malware_prediction ? "#27ae60" : "#e74c3c"
               }`,
             }}
           >
-            {scanResult.clean ? (
-              <FileCheck size={24} color="#27ae60" />
-            ) : (
-              <AlertTriangle size={24} color="#e74c3c" />
-            )}
-            <div>
-              <p style={{ fontWeight: "bold" }}>{file.name}</p>
-              <p>
-                {scanResult.clean
-                  ? "File is clean and safe to use!"
-                  : `Threat detected: ${scanResult.threatName}`}
-              </p>
-              {/* Display model score if available */}
-              {scanResult.score !== undefined && (
-                <p>
-                  Model confidence: <b>{scanResult.score}%</b>
+            <div style={styles.resultHeader}>
+              {!scanResult.malware_prediction ? (
+                <FileCheck size={24} color="#27ae60" />
+              ) : (
+                <AlertTriangle size={24} color="#e74c3c" />
+              )}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <p style={{ fontWeight: "bold", margin: 0 }}>{scanResult.file_name}</p>
+                  <span 
+                    style={{
+                      ...styles.badge, 
+                      ...(scanResult.malware_prediction ? styles.threatBadge : styles.safeBadge)
+                    }}
+                  >
+                    {scanResult.malware_prediction ? "MALWARE" : "CLEAN"}
+                  </span>
+                </div>
+                <p style={{ margin: "5px 0 0" }}>
+                  {scanResult.malware_prediction
+                    ? "Malware detected! This file may be harmful to your system."
+                    : "File is clean and safe to use!"}
                 </p>
+              </div>
+              {console.log("Rendering report button", scanResult)}
+              <button 
+                style={styles.reportButton}
+                onClick={generateReport}
+              >
+                <Download size={16} />
+                Export Report
+              </button>
+            </div>
+
+            {/* File Details Section */}
+            <div style={styles.detailSection}>
+              <button 
+                style={styles.detailToggle}
+                onClick={() => setShowDetails(!showDetails)}
+              >
+                <span>File Details</span>
+                {showDetails ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              </button>
+              
+              {showDetails && (
+                <div style={styles.detailGrid}>
+                  <div style={styles.detailItem}>
+                    <span style={styles.detailLabel}>File Size</span>
+                    <span style={styles.detailValue}>{formatBytes(scanResult.file_size)}</span>
+                  </div>
+                  <div style={styles.detailItem}>
+                    <span style={styles.detailLabel}>Processing Time</span>
+                    <span style={styles.detailValue}>{scanResult.processing_time.toFixed(2)}s</span>
+                  </div>
+                  <div style={styles.detailItem}>
+                    <span style={styles.detailLabel}>Confidence</span>
+                    <span style={styles.detailValue}>{Math.round(scanResult.probability * 100)}%</span>
+                    <div style={styles.progressBar}>
+                      <div 
+                        style={{
+                          ...styles.progressFill,
+                          width: `${scanResult.probability * 100}%`,
+                          backgroundColor: scanResult.malware_prediction ? "#e74c3c" : "#27ae60"
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div style={styles.detailItem}>
+                    <span style={styles.detailLabel}>Prediction Class</span>
+                    <span style={styles.detailValue}>{scanResult.prediction_class}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Features Section */}
+            <div style={styles.detailSection}>
+              <button 
+                style={styles.detailToggle}
+                onClick={() => setShowFeatures(!showFeatures)}
+              >
+                <span>Analysis Features ({scanResult.feature_list?.length || 0})</span>
+                {showFeatures ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              </button>
+              
+              {showFeatures && scanResult.feature_list && scanResult.features_used && (
+                <div style={styles.featureGrid}>
+                  {scanResult.feature_list.map((feature, index) => (
+                    <div key={index} style={styles.featureItem}>
+                      <strong>{feature}:</strong> {scanResult.features_used[index]}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -418,6 +657,9 @@ const MalwareDetectionSystem = () => {
           View on GitHub
         </a>
       </footer>
+      {console.log("scanning:", scanning)}
+      {console.log("file:", file)}
+      {console.log("scanResult:", scanResult)}
     </div>
   );
 };

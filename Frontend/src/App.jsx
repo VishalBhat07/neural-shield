@@ -6,6 +6,7 @@ import FileInfo from "./components/Fileinfo";
 import FeatureSection from "./components/FeatureSection";
 import Footer from "./components/Footer";
 import FileAnimation from "./components/FileAnimation";
+import jsPDF from "jspdf";
 import "./App.css";
 
 const App = () => {
@@ -44,6 +45,7 @@ const App = () => {
       // Set scanResult here so FileInfo can display it
       setScanning(false);
       setScanResult({
+        ...result,
         clean: !result.malware_prediction,
         threatName: result.malware_prediction ? "Malware Detected" : null,
         score: result.probability !== undefined ? Math.round(result.probability * 100) : undefined,
@@ -57,6 +59,48 @@ const App = () => {
       });
       console.error("Error uploading file:", error);
     }
+  };
+
+  // Generate report
+  const generateReport = () => {
+    if (!scanResult) return;
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("===== Malware Detection Report =====", 10, 15);
+
+    doc.setFontSize(12);
+    let y = 30;
+    doc.text(`File: ${scanResult.file_name}`, 10, y);
+    y += 8;
+    doc.text(`Size: ${scanResult.file_size} bytes`, 10, y);
+    y += 8;
+    doc.text(`Scan Date: ${new Date().toLocaleString()}`, 10, y);
+    y += 12;
+    doc.text(`Result: ${scanResult.malware_prediction ? 'MALWARE DETECTED' : 'CLEAN'}`, 10, y);
+    y += 8;
+    doc.text(`Confidence: ${Math.round(scanResult.probability * 100)}%`, 10, y);
+    y += 8;
+    doc.text(`Prediction Class: ${scanResult.prediction_class} [0 for benign and 1 for malware]`, 10, y);
+    y += 8;
+    doc.text(`Processing Time: ${scanResult.processing_time.toFixed(2)}s`, 10, y);
+    y += 12;
+
+    doc.text("===== Features Analyzed =====", 10, y);
+    y += 8;
+    if (scanResult.feature_list && scanResult.features_used) {
+      for (let i = 0; i < scanResult.feature_list.length; i++) {
+        doc.text(`${scanResult.feature_list[i]}: ${scanResult.features_used[i]}`, 10, y);
+        y += 7;
+        if (y > 280) { // Avoid writing off the page
+          doc.addPage();
+          y = 15;
+        }
+      }
+    }
+
+    doc.save(`malware-report-${scanResult.file_name}.pdf`);
   };
 
   // Clear animation after it completes
@@ -122,7 +166,12 @@ const App = () => {
         />
 
         {(scanning || (file && scanResult)) && (
-          <FileInfo file={file} scanning={scanning} scanResult={scanResult} />
+          <FileInfo
+            file={file}
+            scanning={scanning}
+            scanResult={scanResult}
+            generateReport={generateReport}
+          />
         )}
 
         <FeatureSection />
