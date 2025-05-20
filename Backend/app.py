@@ -1,16 +1,43 @@
 from flask import Flask, request, jsonify
-from pe_feature_extractor import extract_pe_features_from_bytes, save_features_to_csv
+from flask_cors import CORS
+from pe_feature_extractor import extract_pe_features_from_bytes
 import joblib
 import pandas as pd
-import numpy as np
+import pickle
 import os
-from cleaner import cleaner
 
-# Load the trained model and scaler
-model = joblib.load("rf_malware_detector.joblib")
-scaler = joblib.load("scaler.joblib")
+# Create directory for model files if it doesn't exist
+os.makedirs('model', exist_ok=True)
+
+# Load the trained model - update path if your model is located elsewhere
+MODEL_PATH = "malwareclassifier-V2.pkl"  # Change this to your model's path
+if not os.path.exists(MODEL_PATH):
+    MODEL_PATH = os.path.join('model', 'malwareclassifier-V2.pkl')
+
+# Try to load the model
+try:
+    clf = joblib.load(MODEL_PATH)
+    print(f"Successfully loaded model from {MODEL_PATH}")
+except Exception as e:
+    print(f"Error loading model: {e}")
+    print("Please ensure the model file is in the correct location")
+    exit(1)
+
+# Define the feature list expected by the model
+# These are the features extracted in the pe_feature_extractor.py file
+FEATURES_LIST = [
+    'MajorLinkerVersion', 'MinorOperatingSystemVersion', 'MajorSubsystemVersion',
+    'SizeOfStackReserve', 'TimeDateStamp', 'MajorOperatingSystemVersion',
+    'Characteristics', 'ImageBase', 'Subsystem', 'MinorImageVersion',
+    'MinorSubsystemVersion', 'SizeOfInitializedData', 'DllCharacteristics',
+    'DirectoryEntryExport', 'ImageDirectoryEntryExport', 'CheckSum',
+    'DirectoryEntryImportSize', 'SectionMaxChar', 'MajorImageVersion',
+    'AddressOfEntryPoint', 'SectionMinEntropy', 'SizeOfHeaders',
+    'SectionMinVirtualsize'
+]
 
 app = Flask(__name__)
+CORS(app, origins=["http://localhost:5173"])
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -32,72 +59,30 @@ def upload_file():
         features = extract_pe_features_from_bytes(file_data, file.filename)
         if features is None:
             return jsonify({"error": "Failed to process PE file"}), 400
-            
-        # Save extracted features to CSV
-        save_features_to_csv([features], output_file="uploaded_file_features.csv")
-        
-        # Run the cleaner function to process the features
-        processed_df = cleaner()  # This processes the uploaded_file_features.csv and creates output.csv
-        
-        # Get the scaler's feature names for consistency
-        scaler_features = scaler.feature_names_in_ if hasattr(scaler, 'feature_names_in_') else None
-        
-        # Read the cleaned data
-        new_data = pd.read_csv("output.csv")
-        
-        # Ensure all values are numeric
-        for col in new_data.columns:
-            new_data[col] = pd.to_numeric(new_data[col], errors='coerce').fillna(0)
-        
-        # Handle feature name mismatch if needed
-        if scaler_features is not None:
-            # Add missing columns with zeros
-            for feature in scaler_features:
-                if feature not in new_data.columns:
-                    new_data[feature] = 0
-            
-            # Select only the features the model knows, in the right order
-            new_data = new_data[scaler_features]
-        
-        # Scale the data
-        try:
-            new_data_scaled = scaler.transform(new_data)
-        except ValueError as e:
-            # Handle potential errors with more detailed information
-            return jsonify({
-                "error": f"Scaling error: {str(e)}",
-                "details": {
-                    "data_shape": new_data.shape,
-                    "columns": list(new_data.columns)
-                }
-            }), 500
-        
-        # Make prediction
-        predictions = model.predict(new_data_scaled)
-        probabilities = model.predict_proba(new_data_scaled)[:, 1] if hasattr(model, 'predict_proba') else None
-        
-        # Clean up temporary files
-        for temp_file in ["uploaded_file_features.csv", "pipe1.csv", "pipe2.csv", "output.csv"]:
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
-        
-        # Return results
+
+        # Extract only the required features in the correct order
+        input_features = []
+        for feat in FEATURES_LIST:
+            input_features.append(features.get(feat, 0))  # Use 0 if feature missing
+
+        # Convert to DataFrame for model
+        input_df = pd.DataFrame([input_features], columns=FEATURES_LIST)
+
+        # Predict
+        prediction = clf.predict(input_df)[0]
+        proba = clf.predict_proba(input_df)[0][1] if hasattr(clf, "predict_proba") else None
+
         result = {
             "message": "File processed successfully",
-            "malware_prediction": bool(predictions[0]),
-            "prediction_class": int(predictions[0])
+            "malware_prediction": bool(prediction == 1),  # 1 = malware, 0 = benign (adjust if needed)
+            "prediction_class": int(prediction),
         }
+        if proba is not None:
+            result["probability"] = float(proba)
 
-        print("Result :",result)
-        
-        # Add probability if available
-        if probabilities is not None:
-            result["probability"] = float(probabilities[0])
-            
         return jsonify(result)
-        
+
     except Exception as e:
-        # Log the error for debugging
         import traceback
         print(f"Error processing file: {str(e)}")
         print(traceback.format_exc())

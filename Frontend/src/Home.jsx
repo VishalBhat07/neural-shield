@@ -207,19 +207,44 @@ const MalwareDetectionSystem = () => {
   const handleFiles = (files) => {
     const file = files[0];
     setFile(file);
-
-    // Simulate scanning process
     setScanning(true);
     setScanResult(null);
 
-    setTimeout(() => {
-      setScanning(false);
-      // Example result - in a real app, this would be based on actual scanning
-      setScanResult({
-        clean: Math.random() > 0.3, // Randomly show clean or infected for demo
-        threatName: !this?.clean ? "Example.Malware.Gen" : null,
+    // Prepare form data
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch("http://localhost:8080/upload", {
+      method: "POST",
+      body: formData,
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        setScanning(false);
+
+        if (data.error) {
+          setScanResult({
+            clean: false,
+            threatName: data.error,
+            score: undefined,
+          });
+          return;
+        }
+
+        setScanResult({
+          clean: !data.malware_prediction,
+          threatName: data.malware_prediction ? "Malware Detected" : null,
+          score: data.probability !== undefined ? Math.round(data.probability * 100) : undefined,
+        });
+      })
+      .catch((err) => {
+        setScanning(false);
+        setScanResult({
+          clean: false,
+          threatName: "Error scanning file",
+          score: undefined,
+        });
       });
-    }, 2000);
   };
 
   // Handle click on dropzone
@@ -362,6 +387,12 @@ const MalwareDetectionSystem = () => {
                   ? "File is clean and safe to use!"
                   : `Threat detected: ${scanResult.threatName}`}
               </p>
+              {/* Display model score if available */}
+              {scanResult.score !== undefined && (
+                <p>
+                  Model confidence: <b>{scanResult.score}%</b>
+                </p>
+              )}
             </div>
           </div>
         )}

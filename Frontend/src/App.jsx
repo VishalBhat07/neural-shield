@@ -20,7 +20,6 @@ const App = () => {
   const handleFiles = async (files) => {
     setFile(files);
 
-    // Simulate scanning process
     setScanning(true);
     setScanResult(null);
 
@@ -34,15 +33,28 @@ const App = () => {
         method: "POST",
         body: formData,
       });
-      // console.log("hehe");
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
       console.log("Backend response:", result);
-      // You can set state or show result in UI here
+
+      // Set scanResult here so FileInfo can display it
+      setScanning(false);
+      setScanResult({
+        clean: !result.malware_prediction,
+        threatName: result.malware_prediction ? "Malware Detected" : null,
+        score: result.probability !== undefined ? Math.round(result.probability * 100) : undefined,
+      });
     } catch (error) {
+      setScanning(false);
+      setScanResult({
+        clean: false,
+        threatName: "Error scanning file",
+        score: undefined,
+      });
       console.error("Error uploading file:", error);
     }
   };
