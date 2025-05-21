@@ -12,6 +12,7 @@ const Footer = () => {
             An open-source file malware detection system designed to keep your
             data safe.
           </p>
+          <p>Designed by Vishal K Bhat, Sumedh Udupa U, V S Sreenvivaas</p>
         </div>
 
         <div className="footer-section">
@@ -61,7 +62,7 @@ const Footer = () => {
 
       <div className="footer-bottom">
         <p>
-          &copy; {new Date().getFullYear()} SecureShield. All rights reserved.
+          &copy; {new Date().getFullYear()} Neural Shield. All rights reserved.
         </p>
       </div>
     </footer>
