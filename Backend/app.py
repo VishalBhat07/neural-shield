@@ -4,16 +4,21 @@ from pe_feature_extractor import extract_pe_features_from_bytes
 import joblib
 import pandas as pd
 import pickle
+from dotenv import load_dotenv
+load_dotenv()
 import os
 import time
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+MODEL_PATH = os.getenv("MODEL_PATH", "malwareclassifier-V2.pkl")
+PORT = int(os.getenv("PORT", 8080))
 
 # Create directory for model files if it doesn't exist
 os.makedirs('model', exist_ok=True)
 
 # Load the trained model - update path if your model is located elsewhere
-MODEL_PATH = "malwareclassifier-V2.pkl"  # Change this to your model's path
 if not os.path.exists(MODEL_PATH):
-    MODEL_PATH = os.path.join('model', 'malwareclassifier-V2.pkl')
+    MODEL_PATH = os.path.join('model', MODEL_PATH)
 
 # Try to load the model
 try:
@@ -38,7 +43,7 @@ FEATURES_LIST = [
 ]
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"])
+CORS(app, origins=[FRONTEND_URL])
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -99,4 +104,4 @@ def upload_file():
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8080)
+    app.run(debug=True, port=PORT)
