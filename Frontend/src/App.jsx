@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "./components/Header";
 import DropZone from "./components/DropZone";
-import FileInfo from "./components/Fileinfo";
+import FileInfo from "./components/FileInfo";
 import FeatureSection from "./components/FeatureSection";
 import Footer from "./components/Footer";
 import FileAnimation from "./components/FileAnimation";
@@ -66,201 +66,168 @@ const App = () => {
   };
 
   // Generate report
-const generateReport = () => {
-  if (!scanResult) return;
+  const generateReport = () => {
+    if (!scanResult) return;
 
-  const doc = new jsPDF();
+    const doc = new jsPDF();
 
-  // Branding + color theme
-  const colors = {
-    bgPrimary: "#ffffff",
-    bgSecondary: "#f9f9f9",
-    bgTertiary: "#eeeeee",
-    textPrimary: "#1a1a1a",
-    textSecondary: "#666666",
-    accentPrimary: "#5d5afa",
-    accentSecondary: "#7b79fb",
-    success: "#3ece6e",
-    warning: "#f0b429",
-    danger: "#f85149",
-  };
+    // Branding + color theme
+    const colors = {
+      bgPrimary: "#ffffff",
+      bgSecondary: "#f9f9f9",
+      bgTertiary: "#eeeeee",
+      textPrimary: "#1a1a1a",
+      textSecondary: "#666666",
+      accentPrimary: "#5d5afa",
+      accentSecondary: "#7b79fb",
+      success: "#3ece6e",
+      warning: "#f0b429",
+      danger: "#f85149",
+    };
 
-  const hexToRgb = (hex) => {
-    if (hex.length > 7) hex = hex.substring(0, 7);
-    hex = hex.replace("#", "");
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    return [r, g, b];
-  };
+    const hexToRgb = (hex) => {
+      if (hex.length > 7) hex = hex.substring(0, 7);
+      hex = hex.replace("#", "");
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return [r, g, b];
+    };
 
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
+    const formatFileSize = (bytes) => {
+      if (bytes === 0) return "0 Bytes";
+      const k = 1024;
+      const sizes = ["Bytes", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    };
 
-  // Set fonts
-  const setHeadingStyle = (size = 16) => {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(size);
+    // Set fonts
+    const setHeadingStyle = (size = 16) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(size);
+      doc.setTextColor(...hexToRgb(colors.accentPrimary));
+    };
+
+    const setBodyStyle = (size = 10) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(size);
+      doc.setTextColor(...hexToRgb(colors.textPrimary));
+    };
+
+    const setSecondaryStyle = (size = 9) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(size);
+      doc.setTextColor(...hexToRgb(colors.textSecondary));
+    };
+
+    // Page setup
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    let y = margin;
+
+    // Header branding
+    doc.setFillColor(...hexToRgb(colors.bgSecondary));
+    doc.rect(0, 0, pageWidth, 40, "F");
+
+    setHeadingStyle(22);
     doc.setTextColor(...hexToRgb(colors.accentPrimary));
-  };
+    doc.text("NeuralShield", margin, 20);
 
-  const setBodyStyle = (size = 10) => {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(size);
-    doc.setTextColor(...hexToRgb(colors.textPrimary));
-  };
+    setSecondaryStyle(11);
+    doc.setTextColor(...hexToRgb(colors.accentSecondary));
+    doc.text("Advanced Malware Detection", margin, 30);
 
-  const setSecondaryStyle = (size = 9) => {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(size);
-    doc.setTextColor(...hexToRgb(colors.textSecondary));
-  };
+    // Divider line
+    doc.setDrawColor(...hexToRgb(colors.accentPrimary));
+    doc.setLineWidth(1);
+    doc.line(margin, 45, pageWidth - margin, 45);
 
-  // Page setup
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
-  let y = margin;
+    y = 55;
 
-  // Header branding
-  doc.setFillColor(...hexToRgb(colors.bgSecondary));
-  doc.rect(0, 0, pageWidth, 40, "F");
+    // Title and date
+    setHeadingStyle(16);
+    doc.text("Malware Scan Report", pageWidth / 2, y, { align: "center" });
 
-  setHeadingStyle(22);
-  doc.setTextColor(...hexToRgb(colors.accentPrimary));
-  doc.text("NeuralShield", margin, 20);
+    setSecondaryStyle(10);
+    doc.text(
+      `Generated on ${new Date().toLocaleString()}`,
+      pageWidth / 2,
+      y + 8,
+      { align: "center" }
+    );
 
-  setSecondaryStyle(11);
-  doc.setTextColor(...hexToRgb(colors.accentSecondary));
-  doc.text("Advanced Malware Detection", margin, 30);
+    y += 20;
 
-  // Divider line
-  doc.setDrawColor(...hexToRgb(colors.accentPrimary));
-  doc.setLineWidth(1);
-  doc.line(margin, 45, pageWidth - margin, 45);
+    // Status card
+    const isClean = !scanResult.malware_prediction;
+    const statusColor = isClean ? colors.success : colors.danger;
+    const statusText = isClean ? "CLEAN FILE" : "MALWARE DETECTED";
+    const confidence = scanResult.probability
+      ? Math.round(scanResult.probability * 100)
+      : "N/A";
 
-  y = 55;
+    doc.setFillColor(...hexToRgb("#f2f2f2"));
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 30, 3, 3, "F");
 
-  // Title and date
-  setHeadingStyle(16);
-  doc.text("Malware Scan Report", pageWidth / 2, y, { align: "center" });
+    doc.setFillColor(...hexToRgb(statusColor));
+    doc.rect(margin, y, 4, 30, "F");
 
-  setSecondaryStyle(10);
-  doc.text(`Generated on ${new Date().toLocaleString()}`, pageWidth / 2, y + 8, { align: "center" });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(...hexToRgb(statusColor));
+    doc.text(statusText, margin + 10, y + 12);
 
-  y += 20;
+    setBodyStyle();
+    doc.text(`Confidence Score: ${confidence}%`, margin + 10, y + 22);
 
-  // Status card
-  const isClean = !scanResult.malware_prediction;
-  const statusColor = isClean ? colors.success : colors.danger;
-  const statusText = isClean ? "CLEAN FILE" : "MALWARE DETECTED";
-  const confidence = scanResult.probability ? Math.round(scanResult.probability * 100) : "N/A";
+    y += 40;
 
-  doc.setFillColor(...hexToRgb("#f2f2f2"));
-  doc.roundedRect(margin, y, pageWidth - margin * 2, 30, 3, 3, "F");
+    // File Information
+    setHeadingStyle(14);
+    doc.text("File Information", margin, y);
 
-  doc.setFillColor(...hexToRgb(statusColor));
-  doc.rect(margin, y, 4, 30, "F");
+    y += 6;
+    doc.setDrawColor(...hexToRgb(colors.bgTertiary));
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.setTextColor(...hexToRgb(statusColor));
-  doc.text(statusText, margin + 10, y + 12);
-
-  setBodyStyle();
-  doc.text(`Confidence Score: ${confidence}%`, margin + 10, y + 22);
-
-  y += 40;
-
-  // File Information
-  setHeadingStyle(14);
-  doc.text("File Information", margin, y);
-
-  y += 6;
-  doc.setDrawColor(...hexToRgb(colors.bgTertiary));
-  doc.setLineWidth(0.5);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 10;
-
-  const fileData = [
-    ["File Name", scanResult.file_name || "N/A"],
-    ["File Size", scanResult.file_size ? formatFileSize(scanResult.file_size) : "N/A"],
-    ["Scan Date", new Date().toLocaleString()],
-    [
-      "Processing Time",
-      typeof scanResult.processing_time === "number"
-        ? `${scanResult.processing_time.toFixed(2)} s`
-        : "N/A",
-    ],
-    [
-      "Prediction Class",
-      scanResult.prediction_class === 0 ? "Benign" : "Malware",
-    ],
-  ];
-
-  autoTable(doc, {
-    startY: y,
-    body: fileData,
-    theme: "plain",
-    styles: {
-      fontSize: 10,
-      cellPadding: 4,
-      textColor: hexToRgb(colors.textPrimary),
-    },
-    columnStyles: {
-      0: {
-        fontStyle: "bold",
-        textColor: hexToRgb(colors.accentPrimary),
-        cellWidth: 60,
-      },
-    },
-    alternateRowStyles: {
-      fillColor: hexToRgb(colors.bgSecondary),
-    },
-    margin: { left: margin, right: margin },
-  });
-
-  y = doc.lastAutoTable.finalY + 15;
-
-  // Features Analyzed
-  setHeadingStyle(14);
-  doc.text("Features Analyzed", margin, y);
-
-  y += 6;
-  doc.setDrawColor(...hexToRgb(colors.bgTertiary));
-  doc.line(margin, y, pageWidth - margin, y);
-
-  y += 10;
-
-  setSecondaryStyle();
-  doc.text("The following features were analyzed to determine the file's classification:", margin, y);
-
-  y += 10;
-
-  if (scanResult.feature_list && scanResult.features_used) {
-    const featureData = scanResult.feature_list.map((feature, index) => [
-      feature,
-      String(scanResult.features_used[index]),
-    ]);
+    const fileData = [
+      ["File Name", scanResult.file_name || "N/A"],
+      [
+        "File Size",
+        scanResult.file_size ? formatFileSize(scanResult.file_size) : "N/A",
+      ],
+      ["Scan Date", new Date().toLocaleString()],
+      [
+        "Processing Time",
+        typeof scanResult.processing_time === "number"
+          ? `${scanResult.processing_time.toFixed(2)} s`
+          : "N/A",
+      ],
+      [
+        "Prediction Class",
+        scanResult.prediction_class === 0 ? "Benign" : "Malware",
+      ],
+    ];
 
     autoTable(doc, {
       startY: y,
-      head: [["Feature", "Value"]],
-      body: featureData,
-      theme: "grid",
-      headStyles: {
-        fillColor: hexToRgb(colors.accentPrimary),
-        textColor: 255,
-        fontStyle: "bold",
-      },
+      body: fileData,
+      theme: "plain",
       styles: {
-        fontSize: 9,
+        fontSize: 10,
+        cellPadding: 4,
         textColor: hexToRgb(colors.textPrimary),
+      },
+      columnStyles: {
+        0: {
+          fontStyle: "bold",
+          textColor: hexToRgb(colors.accentPrimary),
+          cellWidth: 60,
+        },
       },
       alternateRowStyles: {
         fillColor: hexToRgb(colors.bgSecondary),
@@ -269,56 +236,109 @@ const generateReport = () => {
     });
 
     y = doc.lastAutoTable.finalY + 15;
-  }
 
-  // Recommendation
-  setHeadingStyle(14);
-  doc.text("Recommendation", margin, y);
+    // Features Analyzed
+    setHeadingStyle(14);
+    doc.text("Features Analyzed", margin, y);
 
-  y += 6;
-  doc.setDrawColor(...hexToRgb(colors.bgTertiary));
-  doc.line(margin, y, pageWidth - margin, y);
+    y += 6;
+    doc.setDrawColor(...hexToRgb(colors.bgTertiary));
+    doc.line(margin, y, pageWidth - margin, y);
 
-  y += 10;
+    y += 10;
 
-  doc.setFillColor(...hexToRgb(isClean ? colors.success : colors.danger));
-  doc.roundedRect(margin, y, pageWidth - margin * 2, 25, 3, 3, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(255, 255, 255);
-  doc.text(isClean ? "File is Safe to Use" : "Security Risk Detected", margin + 10, y + 10);
-
-  setBodyStyle();
-  doc.setTextColor(255, 255, 255);
-  doc.text(
-    isClean
-      ? "This file is classified as clean. No malicious patterns were detected."
-      : "Malicious patterns were detected. We recommend deleting this file immediately.",
-    margin + 10,
-    y + 18,
-    { maxWidth: pageWidth - margin * 2 - 10 }
-  );
-
-  // Footer
-  const totalPages = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(...hexToRgb(colors.textSecondary));
+    setSecondaryStyle();
     doc.text(
-      `Generated by NeuralShield • ${new Date().toLocaleDateString()}`,
-      pageWidth / 2,
-      pageHeight - 10,
-      { align: "center" }
+      "The following features were analyzed to determine the file's classification:",
+      margin,
+      y
     );
-    doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 10);
-  }
 
-  doc.save(`NeuralShield-report-${scanResult.file_name}.pdf`);
-};
+    y += 10;
 
+    if (scanResult.feature_list && scanResult.features_used) {
+      const featureData = scanResult.feature_list.map((feature, index) => [
+        feature,
+        String(scanResult.features_used[index]),
+      ]);
 
+      autoTable(doc, {
+        startY: y,
+        head: [["Feature", "Value"]],
+        body: featureData,
+        theme: "grid",
+        headStyles: {
+          fillColor: hexToRgb(colors.accentPrimary),
+          textColor: 255,
+          fontStyle: "bold",
+        },
+        styles: {
+          fontSize: 9,
+          textColor: hexToRgb(colors.textPrimary),
+        },
+        alternateRowStyles: {
+          fillColor: hexToRgb(colors.bgSecondary),
+        },
+        margin: { left: margin, right: margin },
+      });
+
+      y = doc.lastAutoTable.finalY + 15;
+    }
+
+    // Recommendation
+    setHeadingStyle(14);
+    doc.text("Recommendation", margin, y);
+
+    y += 6;
+    doc.setDrawColor(...hexToRgb(colors.bgTertiary));
+    doc.line(margin, y, pageWidth - margin, y);
+
+    y += 10;
+
+    doc.setFillColor(...hexToRgb(isClean ? colors.success : colors.danger));
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 25, 3, 3, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.text(
+      isClean ? "File is Safe to Use" : "Security Risk Detected",
+      margin + 10,
+      y + 10
+    );
+
+    setBodyStyle();
+    doc.setTextColor(255, 255, 255);
+    doc.text(
+      isClean
+        ? "This file is classified as clean. No malicious patterns were detected."
+        : "Malicious patterns were detected. We recommend deleting this file immediately.",
+      margin + 10,
+      y + 18,
+      { maxWidth: pageWidth - margin * 2 - 10 }
+    );
+
+    // Footer
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(...hexToRgb(colors.textSecondary));
+      doc.text(
+        `Generated by NeuralShield • ${new Date().toLocaleDateString()}`,
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" }
+      );
+      doc.text(
+        `Page ${i} of ${totalPages}`,
+        pageWidth - margin,
+        pageHeight - 10
+      );
+    }
+
+    doc.save(`NeuralShield-report-${scanResult.file_name}.pdf`);
+  };
 
   // Clear animation after it completes
   const handleAnimationEnd = () => {
