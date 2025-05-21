@@ -15,7 +15,7 @@ The **Machine Learning-Based Detection** component leverages a machine learning 
 This module uses the following technologies:
 
 - **Python**
-- **Scikit-Learn**
+- **Scikit-learn**
 - **Flask**
 - **NumPy**
 - **Pandas**
